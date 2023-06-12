@@ -2,7 +2,7 @@
 name = "cw-otms"
 version = "0.1.0"
 authors = ["piotrdaniel94 <piotrdaniel94@gmail.com>"]
-edition = "2023"
+edition = "2021"
 repository = "https://github.com/piotrdaniel94/cw-otms"
 description = "cosmos network atom chain smart contract"
 license = "MIT OR Apache-2.0"

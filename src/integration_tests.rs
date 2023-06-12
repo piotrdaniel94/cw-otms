@@ -5,7 +5,7 @@ mod tests {
     use cosmwasm_std::{Addr, Coin, Empty, Uint128};
     use cw_multi_test::{App, AppBuilder, Contract, ContractWrapper, Executor};
 
-    pub fn contract_template() -> Box<dyn Contract<Empty>> {
+    pub fn contract_otms() -> Box<dyn Contract<Empty>> {
         let contract = ContractWrapper::new(
             crate::contract::execute,
             crate::contract::instantiate,
@@ -16,7 +16,7 @@ mod tests {
 
     const USER: &str = "USER";
     const ADMIN: &str = "ADMIN";
-    const NATIVE_DENOM: &str = "denom";
+    const NATIVE_DENOM: &str = "atom";
 
     fn mock_app() -> App {
         AppBuilder::new().build(|router, _, storage| {
@@ -36,12 +36,12 @@ mod tests {
 
     fn proper_instantiate() -> (App, CwTemplateContract) {
         let mut app = mock_app();
-        let cw_template_id = app.store_code(contract_template());
+        let cw_contract_otms_id = app.store_code(contract_otms());
 
         let msg = InstantiateMsg { count: 1i32 };
-        let cw_template_contract_addr = app
+        let cw_contract_otms_addr = app
             .instantiate_contract(
-                cw_template_id,
+                cw_contract_otms_id,
                 Addr::unchecked(ADMIN),
                 &msg,
                 &[],
@@ -50,9 +50,9 @@ mod tests {
             )
             .unwrap();
 
-        let cw_template_contract = CwTemplateContract(cw_template_contract_addr);
+        let cw_otms_contract = CwTemplateContract(cw_contract_otms_addr);
 
-        (app, cw_template_contract)
+        (app, cw_otms_contract)
     }
 
     mod count {
