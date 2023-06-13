@@ -2,7 +2,7 @@
 mod tests {
     use crate::helpers::CwTemplateContract;
     use crate::msg::InstantiateMsg;
-    use cosmwasm_std::{Addr, Coin, Empty, Uint128};
+    use cosmwasm_std::{Addr, Coin, Empty, Uint128, coin};
     use cw_multi_test::{App, AppBuilder, Contract, ContractWrapper, Executor};
 
     pub fn contract_otms() -> Box<dyn Contract<Empty>> {
@@ -38,7 +38,7 @@ mod tests {
         let mut app = mock_app();
         let cw_contract_otms_id = app.store_code(contract_otms());
 
-        let msg = InstantiateMsg { count: 1i32 };
+        let msg = InstantiateMsg { count: 1i32, minimal_donation: coin(10, "atom") };
         let cw_contract_otms_addr = app
             .instantiate_contract(
                 cw_contract_otms_id,

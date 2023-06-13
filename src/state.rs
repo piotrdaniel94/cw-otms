@@ -2,6 +2,7 @@ use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
 use cosmwasm_std::Addr;
+use cosmwasm_std::Coin;
 use cw_storage_plus::Item;
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
@@ -11,3 +12,4 @@ pub struct State {
 }
 
 pub const STATE: Item<State> = Item::new("state");
+pub const MINIMAL_DONATION: Item<Coin> = Item::new("minimal_donation");
