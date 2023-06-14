@@ -11,6 +11,10 @@ pub enum ContractError {
 
     #[error("Cannot set to own account")]
     CannotSetOwnAccount,
-    // Add any other custom errors you like here.
-    // Look at https://docs.rs/thiserror/1.0.21/thiserror/ for details.
+
+    #[error("Send some coins to create an escrow")]
+    EmptyBalance {},
+
+    #[error("Escrow id already in use")]
+    AlreadyInUse {},
 }

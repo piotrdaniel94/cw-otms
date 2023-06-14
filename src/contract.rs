@@ -1,11 +1,12 @@
 #[cfg(not(feature = "library"))]
 use cosmwasm_std::entry_point;
-use cosmwasm_std::{to_binary, Binary, Deps, DepsMut, Env, MessageInfo, BankMsg, Response, StdResult};
+use cosmwasm_std::{to_binary, Binary, Deps, DepsMut, Env, MessageInfo, BankMsg, Addr, Response, StdResult};
 use cw2::set_contract_version;
+use cw20::{Balance};
 
 use crate::error::ContractError;
-use crate::msg::{ExecuteMsg, GetCountResponse, InstantiateMsg, QueryMsg};
-use crate::state::{State, STATE, MINIMAL_DONATION};
+use crate::msg::{ExecuteMsg, GetCountResponse, InstantiateMsg, QueryMsg, CreateMsg};
+use crate::state::{State, STATE, MINIMAL_DONATION, GenericBalance, Escrow, ESCROWS};
 
 // version info for migration info
 const CONTRACT_NAME: &str = "crates.io:cw-otms";
@@ -43,7 +44,8 @@ pub fn execute(
         ExecuteMsg::Increment {} => execute::increment(deps),
         ExecuteMsg::Reset { count } => execute::reset(deps, info, count),
         ExecuteMsg:: Donate {} => execute::donate(deps, info),
-        ExecuteMsg:: Withdraw{} => execute::withdraw(deps, env, info)
+        ExecuteMsg:: Withdraw{} => execute::withdraw(deps, env, info),
+        ExecuteMsg:: Create(msg)=> execute::execute_create(deps, msg, Balance::from(info.funds), &info.sender)
     }
 }
 
@@ -105,6 +107,57 @@ pub mod execute {
         .add_attribute("sender", info.sender.as_str());
 
         Ok(resp)    
+    }
+
+    pub fn execute_create(
+        deps: DepsMut,
+        msg: CreateMsg,
+        balance: Balance,
+        sender: &Addr,
+    ) -> Result<Response, ContractError> {
+        if balance.is_empty(){
+            return Err(ContractError::EmptyBalance{});
+        }
+        let mut cw20_whitelist = msg.addr_whitelist(deps.api)?;
+        let escrow_balance = match balance {
+            Balance::Native(balance) => GenericBalance {
+                native: balance.0,
+                cw20: vec![],
+            },
+            Balance::Cw20(token) => {
+                // make sure the token sent is on the whitelist by default
+                if !cw20_whitelist.iter().any(|t| t == &token.address) {
+                    cw20_whitelist.push(token.address.clone())
+                }
+                GenericBalance {
+                    native: vec![],
+                    cw20: vec![token],
+                }
+            }
+        };
+
+        let recipient: Option<Addr> = msg.recipient.and_then(|addr|deps.api.addr_validate(&addr).ok());
+        let escrow = Escrow {
+            arbiter: deps.api.addr_validate(&msg.arbiter)?,
+            recipient,
+            source: sender.clone(),
+            title: msg.title,
+            description: msg.description,
+            end_height: msg.end_height,
+            end_time: msg.end_time,
+            balance: escrow_balance,
+            cw20_whitelist,
+        };
+
+        // try to store it, fail if the id was already in use
+        ESCROWS.update(deps.storage, &msg.id, |existing| match existing {
+            None => Ok(escrow),
+            Some(_) => Err(ContractError::AlreadyInUse {}),
+        })?;
+
+
+        let res = Response::new().add_attributes(vec![("action", "create"), ("id", msg.id.as_str())]);
+        Ok(res)
     }
 
 }
