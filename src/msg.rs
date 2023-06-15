@@ -1,6 +1,6 @@
 use cosmwasm_schema::{cw_serde, QueryResponses};
 use cosmwasm_std::{Coin, Api, Addr, StdResult};
-use cw20::{Cw20Coin};
+use cw20::{Cw20Coin, Cw20ReceiveMsg};
 
 #[cw_serde]
 pub struct InstantiateMsg {
@@ -28,7 +28,7 @@ pub enum ExecuteMsg {
     },
 
     //Approve sends all tokens to the recipient. Only the arbiter can do this
-    Apporve{
+    Approve{
         id: String,
     },
 
@@ -36,7 +36,10 @@ pub enum ExecuteMsg {
     //arbiter can do this anytime or anyone can do this after a timeout
     Refund{
         id: String,
-    }
+    },
+
+    //This accepts a properly-encoded ReceiveMsg from a cw20 contract
+    Receive(Cw20ReceiveMsg),
 }
 
 #[cw_serde]
@@ -69,7 +72,6 @@ pub struct ListResponse {
 pub struct DetailsResponse{
     //id of this escrow
     pub id: String,
-
     pub arbiter: String,
     //if approved the funds goto the recipient
     pub recipient: Option<String>,
@@ -79,12 +81,12 @@ pub struct DetailsResponse{
     pub description: String,
     //when end height set and block height exceeds this value the escrow is expired.
     //Once a escrow is expired, it can be returned to the original funder(via "refund").
-    pub end_heigth: Option<u64>,
+    pub end_height: Option<u64>,
     //block time exceeds this value the escrow is expired. 
     //once an escrow is expired, it can be returned to the original funder(via "refund").
     pub end_time: Option<u64>,
     //Balance in native tokens
-    pub native_balacne: Vec<Coin>,
+    pub native_balance: Vec<Coin>,
     //Balance in cw20 tokens
     pub cw20_balance: Vec<Cw20Coin>,
     //whitelisted cw20 tokens
@@ -131,3 +133,14 @@ impl CreateMsg {
         }
     }
 }
+
+#[cw_serde]
+pub enum ReceiveMsg {
+    Create(CreateMsg),
+    /// Adds all sent native tokens to the contract
+    TopUp {
+        id: String,
+    },
+}
+
+
