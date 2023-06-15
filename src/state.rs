@@ -4,7 +4,7 @@ use cw20::{Balance, Cw20CoinVerified};
 use schemars::JsonSchema;
 use serde::{Deserialize, Serialize};
 
-use cosmwasm_std::{Addr, Coin, Env, Timestamp};
+use cosmwasm_std::{Addr, Coin, Env, Timestamp, StdResult, Order, Storage};
 use cw_storage_plus::{Item, Map};
 
 #[derive(Serialize, Deserialize, Clone, Debug, PartialEq, Eq, JsonSchema)]
@@ -114,9 +114,9 @@ impl Escrow {
 
 pub const ESCROWS: Map<&str, Escrow> = Map::new("escrow");
 
-// This returns the list of ids for all registered escrows
-// pub fn all_escrow_ids(storage: &dyn Storage) -> StdResult<Vec<String>> {
-//     ESCROWS
-//         .keys(storage, None, None, Order::Ascending)
-//         .collect()
-// }
+//This returns the list of ids for all registered escrows
+pub fn all_escrow_ids(storage: &dyn Storage) -> StdResult<Vec<String>> {
+    ESCROWS
+        .keys(storage, None, None, Order::Ascending)
+        .collect()
+}

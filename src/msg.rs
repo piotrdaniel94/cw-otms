@@ -1,5 +1,6 @@
 use cosmwasm_schema::{cw_serde, QueryResponses};
 use cosmwasm_std::{Coin, Api, Addr, StdResult};
+use cw20::{Cw20Coin};
 
 #[cw_serde]
 pub struct InstantiateMsg {
@@ -15,6 +16,27 @@ pub enum ExecuteMsg {
     Withdraw{},
 
     Create(CreateMsg),
+    
+    //set the recipient of the given escrow
+    SetRecipient{
+        id: String,
+        recipient: String,
+    },
+
+    TopUp{
+        id: String,
+    },
+
+    //Approve sends all tokens to the recipient. Only the arbiter can do this
+    Apporve{
+        id: String,
+    },
+
+    //Refund returns all remaining tokens to the original sender,
+    //arbiter can do this anytime or anyone can do this after a timeout
+    Refund{
+        id: String,
+    }
 }
 
 #[cw_serde]
@@ -23,12 +45,50 @@ pub enum QueryMsg {
     // GetCount returns the current count as a json-encoded number
     #[returns(GetCountResponse)]
     GetCount {},
+
+    #[returns(ListResponse)]
+    List{},
+
+    #[returns(DetailsResponse)]
+    Details{id: String},
 }
 
 // We define a custom struct for each query response
 #[cw_serde]
 pub struct GetCountResponse {
     pub count: i32,
+}
+
+#[cw_serde]
+pub struct ListResponse {
+    //list all registered ids
+    pub escrows: Vec<String>,
+}
+
+#[cw_serde]
+pub struct DetailsResponse{
+    //id of this escrow
+    pub id: String,
+
+    pub arbiter: String,
+    //if approved the funds goto the recipient
+    pub recipient: Option<String>,
+    //if refunded, funds go to the source
+    pub source: String,
+    pub title: String,
+    pub description: String,
+    //when end height set and block height exceeds this value the escrow is expired.
+    //Once a escrow is expired, it can be returned to the original funder(via "refund").
+    pub end_heigth: Option<u64>,
+    //block time exceeds this value the escrow is expired. 
+    //once an escrow is expired, it can be returned to the original funder(via "refund").
+    pub end_time: Option<u64>,
+    //Balance in native tokens
+    pub native_balacne: Vec<Coin>,
+    //Balance in cw20 tokens
+    pub cw20_balance: Vec<Cw20Coin>,
+    //whitelisted cw20 tokens
+    pub cw20_whitelist: Vec<String>,
 }
 
 #[cw_serde]

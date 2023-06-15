@@ -17,4 +17,13 @@ pub enum ContractError {
 
     #[error("Escrow id already in use")]
     AlreadyInUse {},
+
+    #[error("Only accepts tokens in the cw20_whitelist")]
+    NotInWhitelist {},
+
+    #[error("Escrow is expired")]
+    Expired {},
+
+    #[error("Recipient is not set")]
+    RecipientNotSet {},
 }
